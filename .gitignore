@@ -1,3 +1,9 @@
+# ajouts perso
+*.json
+/data_generated
+/data_generatedOld
+*.xlsx
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
