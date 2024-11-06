@@ -47,7 +47,7 @@ def generate_names(prefix, count):
 
 
 def generate_json_files_from_profiles(
-    load_data, meter_names, readingtype, output_folder="data_generated"
+    load_data, meter_names, readingtype,reg_type, output_folder="data_generated"
 ):
     # st.write("start generate_json_files_from_profiles")
     for it, col in enumerate(load_data):
@@ -102,7 +102,7 @@ def generate_json_files_from_profiles(
         # st.write("fin des intervalreadings2")
 
         # Nom du fichier basé sur le nom du compteur
-        json_filename = f"{output_folder}/{col}.json"
+        json_filename = f"{output_folder}/{col}_{reg_type}.json"
 
         # st.write("fin des intervalreadings3")
 
@@ -116,41 +116,51 @@ def generate_json_files_from_profiles(
         # print(f"Fichier JSON généré : {json_filename}")
         st.write(f"Fichier JSON généré : {json_filename}")
 
-def timeslice_to_readingtype(x):
-    return {
-        "15min" : "0.0.2.1.1.1.12.0.0.0.0.0.0.0.0.3.72.0",# A+
-        "T0" : "0.0.4.1.1.1.12.0.0.0.0.0.0.0.0.3.72.0",# A+
-        "T1" : "0.0.4.1.1.1.12.0.0.0.0.1.0.0.0.3.72.0",# A+
-        "T2" : "0.0.4.1.1.1.12.0.0.0.0.2.0.0.0.3.72.0",# A+
-        }.get(x)
+def timeslice_to_readingtype(x,register_type='A+'):
+    return {'A+':
+                {
+                "15min" : "0.0.2.1.1.1.12.0.0.0.0.0.0.0.0.3.72.0",
+                "T0" : "0.0.4.1.1.1.12.0.0.0.0.0.0.0.0.3.72.0",
+                "T1" : "0.0.4.1.1.1.12.0.0.0.0.1.0.0.0.3.72.0",
+                "T2" : "0.0.4.1.1.1.12.0.0.0.0.2.0.0.0.3.72.0",
+                },
+            'A-':
+                {
+                "15min" : "0.0.2.1.19.1.12.0.0.0.0.0.0.0.0.3.72.0",
+                "T0" : "0.0.4.1.19.1.12.0.0.0.0.0.0.0.0.3.72.0",
+                "T1" : "0.0.4.1.19.1.12.0.0.0.0.1.0.0.0.3.72.0",
+                "T2" : "0.0.4.1.19.1.12.0.0.0.0.2.0.0.0.3.72.0",
+                }
+        }.get(register_type).get(x)
 
 # Fonction fictive pour générer les fichiers (à personnaliser)
-def generate_file(load_curves):
-    st.write(
-        f"Generating file from {load_curves.index[0]} to {load_curves.index[-1]}"
-    )
-    
-    # load_curves
-    
-    meter_names = load_curves.columns.tolist()
-    # meter_names = index_curves_24h.columns.tolist()
-    st.write(f"Meter names: {meter_names}")
-    
-    tmp_names = []
-    tmp_readingtype = []
-    for elem in meter_names:
-        tmp_names.append(elem.split("_")[0])
-        tmp_readingtype.append(timeslice_to_readingtype(elem.split("_")[1]))
+def generate_file(load_curves,register_type=['A+']):
+    for reg in register_type:
+        st.write(
+            f"Generating {reg} file from {load_curves.index[0]} to {load_curves.index[-1]}"
+        )
         
-    # st.write(f"Metering point names: {metering_point_names}")
-    # st.write(tmp_names)
-    # st.write(tmp_readingtype)
+        # load_curves
+        
+        meter_names = load_curves.columns.tolist()
+        # meter_names = index_curves_24h.columns.tolist()
+        st.write(f"Meter names: {meter_names}")
+        
+        tmp_names = []
+        tmp_readingtype = []
+        for elem in meter_names:
+            tmp_names.append(elem.split("_")[0])
+            tmp_readingtype.append(timeslice_to_readingtype(elem.split("_")[1],register_type=reg))
+            
+        # st.write(f"Metering point names: {metering_point_names}")
+        # st.write(tmp_names)
+        # st.write(tmp_readingtype)
 
-    # generate_json_files_from_profiles(index_curves_24h, tmp_names, tmp_readingtype)
-    # st.write("start generate json")
-    generate_json_files_from_profiles(load_curves, tmp_names, tmp_readingtype)
+        # generate_json_files_from_profiles(index_curves_24h, tmp_names, tmp_readingtype)
+        # st.write("start generate json")
+        generate_json_files_from_profiles(load_curves, tmp_names, tmp_readingtype,reg)
 
-    st.success("file successfully generated!")
+        st.success("file successfully generated!")
 
 
 # --------------------------------------
@@ -457,6 +467,12 @@ curve_type = st.selectbox(
     ["Index 15min", "Index 24h T0", "Index 24h T1/T2", "Tout"],
 )
 
+# Choix du type de registre (A+ et ou A-)
+register_types = st.multiselect(
+    "Choississez le type de registre à générer (A+ et/ou A-)",
+    ["A+", "A-"],
+    ["A+"],
+)
 # Option pour entrer manuellement ou via un fichier
 input_type = st.radio(
     "Choisissez comment fournir les paramètres des meters",
@@ -626,12 +642,12 @@ if st.button("Générer"):
 
     if curve_type == "Tout":
         # st.write("Generate tout")
-        generate_file(index_curves_15min)
-        generate_file(index_curves_24h)        
+        generate_file(index_curves_15min,register_types)
+        generate_file(index_curves_24h,register_types)        
     else:
         # st.write("Generate else")
         # st.dataframe(index_curves)
-        generate_file(index_curves)
+        generate_file(index_curves,register_types)
 
     if afficher_plot:
         # st.write("Afficher plot")
