@@ -2,13 +2,10 @@ from os.path import join
 from pathlib import Path
 import json
 import uuid
-#
 import streamlit as st
-#
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
 
 # ---------------------------------------------
 # TODO
@@ -89,7 +86,7 @@ def generate_json_files_from_profiles(
         for timestamp, value in load_data.iloc[:,it].items():
             tmp_intervalreading = {
                 "timeStamp": timestamp.strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
+                    "%Y-%m-%dT%H:%M:%S%z" 
                 ),  # Conversion de la date en format ISO 8601
                 "value": f"{value}",
                 "ReadingQualities": [{"ref": "1.0.0"}],
@@ -569,7 +566,11 @@ elif input_type == "Via un fichier XLSX":
 start_date = st.date_input(
     "Date de début", pd.Timestamp.today() - pd.Timedelta(days=7)
 )
+start_date = pd.to_datetime(start_date).tz_localize('Europe/Zurich') #timestamp zurich
+
 end_date = st.date_input("Date de fin", pd.Timestamp.today())
+end_date = pd.to_datetime(end_date).tz_localize('Europe/Zurich') #timestamp zurich
+
 date_range = (start_date, end_date)
 
 afficher_plot = st.checkbox("Afficher le graphique ?")
@@ -591,12 +592,12 @@ if st.button("Générer"):
     elif curve_type == "Index 24h T0":
         # st.write("Index 24h T0")
         index_curves = load_curves.cumsum() + first_indext0
-        index_curves = index_curves.asfreq("24h", method="pad")
+        index_curves = index_curves.asfreq("1D", method="pad")
         index_curves = index_curves.add_suffix("_T0")
     elif curve_type == "Index 24h T1/T2":
         # st.write("Index 24h T1/T2")
         index_curves = load_curves.cumsum()
-        index_curves = index_curves.asfreq("24h", method="pad")
+        index_curves = index_curves.asfreq("1D", method="pad")
         index_curves = pd.concat(
             [
                 index_curves.add_suffix("_T1") + first_indext1,
@@ -610,7 +611,7 @@ if st.button("Générer"):
         index_curves_15min = index_curves_15min.add_suffix("_15min")
 
         index_curves_24h = load_curves.cumsum()
-        index_curves_24h = index_curves_24h.asfreq("24h", method="pad")
+        index_curves_24h = index_curves_24h.asfreq("1D", method="pad")
         index_curves_24h = pd.concat(
             [
                 index_curves_24h.add_suffix("_T0") + first_indext0,
