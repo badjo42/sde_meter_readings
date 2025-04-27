@@ -2,6 +2,7 @@
 *.json
 /data_generated
 /data_generatedOld
+/exemple
 *.xlsx
 
 # Byte-compiled / optimized / DLL files
