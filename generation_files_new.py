@@ -162,9 +162,9 @@ def generate_file(load_curves, register_type=["A+"]):
         tmp_names = []
         tmp_readingtype = []
         for elem in meter_names:
-            tmp_names.append(elem.split("_")[0])
+            tmp_names.append("_".join(elem.split("_")[:-1]))
             tmp_readingtype.append(
-                timeslice_to_readingtype(elem.split("_")[1], register_type=reg)
+                timeslice_to_readingtype(elem.split("_")[-1], register_type=reg)
             )
 
         # st.write(f"Metering point names: {metering_point_names}")
@@ -340,6 +340,7 @@ if page == "Génération MeterReadings":
             lines = st.text_area(
                 "Entrez les noms des meters, 1er index [kWh] (un par ligne)"
             ).split("\n")
+            # st.write(lines)
 
             meter_names = []
             first_indext0 = []
