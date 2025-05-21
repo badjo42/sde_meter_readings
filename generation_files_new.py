@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from xml.etree.ElementTree import Element, SubElement, tostring
 import xml.dom.minidom as minidom
 from io import BytesIO
+import zipfile
+import os
 
 
 # ---------------------------------------------
@@ -126,15 +128,17 @@ def generate_json_files_from_profiles(
         # print(f"Fichier JSON généré : {json_filename}")
         st.write(f"Fichier JSON généré : {json_filename}")
         
-        # Lecture du fichier et conversion en BytesIO pour téléchargement
-        with open(json_filename, "rb") as file:
-            file_bytes = file.read()
-            st.download_button(
-                label=f"📥 Télécharger {col}_{reg_type}.json",
-                data=BytesIO(file_bytes),
-                file_name=f"{col}_{reg_type}.json",
-                mime="application/json",
-            )
+        return json_filename
+        
+        # # Lecture du fichier et conversion en BytesIO pour téléchargement
+        # with open(json_filename, "rb") as file:
+        #     file_bytes = file.read()
+        #     st.download_button(
+        #         label=f"📥 Télécharger {col}_{reg_type}.json",
+        #         data=BytesIO(file_bytes),
+        #         file_name=f"{col}_{reg_type}.json",
+        #         mime="application/json",
+        #     )
 
 
 def timeslice_to_readingtype(x, register_type="A+"):
@@ -185,11 +189,12 @@ def generate_file(load_curves, register_type=["A+"]):
 
         # generate_json_files_from_profiles(index_curves_24h, tmp_names, tmp_readingtype)
         # st.write("start generate json")
-        generate_json_files_from_profiles(
+        generated_file = generate_json_files_from_profiles(
             load_curves, tmp_names, tmp_readingtype, reg
         )
 
-        st.success("file successfully generated!")
+        st.success(f"file successfully generated!, {generated_file}")
+        return f"./{generated_file}"
 
 
 # --------------------------------------
@@ -485,6 +490,7 @@ if page == "Génération MeterReadings":
     # Bouton pour lancer la génération des fichiers
     if st.button("Générer"):
         # generate_file(meter_names, metering_point_names, curve_type, date_range)
+        generated_files = []
 
         # Générer les courbes de charge
         # print("test")
@@ -538,13 +544,28 @@ if page == "Génération MeterReadings":
 
         if curve_type == "Tout":
             # st.write("Generate tout")
-            generate_file(index_curves_15min, register_types)
-            generate_file(index_curves_24h, register_types)
+            generated_files.append(generate_file(index_curves_15min, register_types))
+            generated_files.append(generate_file(index_curves_24h, register_types))
         else:
             # st.write("Generate else")
             # st.dataframe(index_curves)
-            generate_file(index_curves, register_types)
+            generated_files.append(generate_file(index_curves, register_types))
 
+        # Création du ZIP
+        st.write(generated_files)
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+            for file_path in generated_files:
+                zipf.write(file_path, arcname=os.path.basename(file_path))
+        zip_buffer.seek(0)
+    
+        st.download_button(
+            label="📦 Télécharger tous les fichiers JSON (.zip)",
+            data=zip_buffer,
+            file_name="meter_readings.zip",
+            mime="application/zip",
+        )
+    
         if afficher_plot:
             # st.write("Afficher plot")
             # Afficher les courbes
