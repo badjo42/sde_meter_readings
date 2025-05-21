@@ -8,6 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from xml.etree.ElementTree import Element, SubElement, tostring
 import xml.dom.minidom as minidom
+from io import BytesIO
+
 
 # ---------------------------------------------
 # TODO
@@ -123,6 +125,16 @@ def generate_json_files_from_profiles(
 
         # print(f"Fichier JSON généré : {json_filename}")
         st.write(f"Fichier JSON généré : {json_filename}")
+        
+        # Lecture du fichier et conversion en BytesIO pour téléchargement
+        with open(json_filename, "rb") as file:
+            file_bytes = file.read()
+            st.download_button(
+                label=f"📥 Télécharger {col}_{reg_type}.json",
+                data=BytesIO(file_bytes),
+                file_name=f"{col}_{reg_type}.json",
+                mime="application/json",
+            )
 
 
 def timeslice_to_readingtype(x, register_type="A+"):
