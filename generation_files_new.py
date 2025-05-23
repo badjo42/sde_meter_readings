@@ -12,6 +12,9 @@ from io import BytesIO
 import zipfile
 import os
 
+def flatten_list(t):
+    return [item for sublist in t for item in sublist]
+
 
 # ---------------------------------------------
 # TODO
@@ -60,6 +63,7 @@ def generate_json_files_from_profiles(
     output_folder="data_generated",
 ):
     # st.write("start generate_json_files_from_profiles")
+    json_filenames_list = []
     for it, col in enumerate(load_data):
         # Création de la structure de base du dictionnaire JSON
         # st.write("loop start")
@@ -128,7 +132,9 @@ def generate_json_files_from_profiles(
         # print(f"Fichier JSON généré : {json_filename}")
         st.write(f"Fichier JSON généré : {json_filename}")
         
-        return json_filename
+        json_filenames_list.append(json_filename)
+    
+    return json_filenames_list
         
         # # Lecture du fichier et conversion en BytesIO pour téléchargement
         # with open(json_filename, "rb") as file:
@@ -164,6 +170,7 @@ def timeslice_to_readingtype(x, register_type="A+"):
 
 # Fonction fictive pour générer les fichiers (à personnaliser)
 def generate_file(load_curves, register_type=["A+"]):
+    json_filenames_list = []
     for reg in register_type:
         st.write(
             f"Generating {reg} file from {load_curves.index[0]} to {load_curves.index[-1]}"
@@ -194,7 +201,11 @@ def generate_file(load_curves, register_type=["A+"]):
         )
 
         st.success(f"file successfully generated!, {generated_file}")
-        return f"./{generated_file}"
+        json_filenames_list.append(generated_file)
+    
+    # st.write("AWDAADADASDASDASDASDASDADSASD")
+    # st.write(json_filenames_list)
+    return json_filenames_list
 
 
 # --------------------------------------
@@ -551,6 +562,7 @@ if page == "Génération MeterReadings":
             # st.dataframe(index_curves)
             generated_files.append(generate_file(index_curves, register_types))
 
+        generated_files = flatten_list(flatten_list(generated_files))
         # Création du ZIP
         st.write(generated_files)
         zip_buffer = BytesIO()
@@ -562,7 +574,7 @@ if page == "Génération MeterReadings":
         st.download_button(
             label="📦 Télécharger tous les fichiers JSON (.zip)",
             data=zip_buffer,
-            file_name="meter_readings.zip",
+            file_name=f"meter_readings_{pd.Timestamp.now().strftime('%Y%m%dT%H%M%S')}.zip",
             mime="application/zip",
         )
     
