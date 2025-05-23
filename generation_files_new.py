@@ -60,6 +60,7 @@ def generate_json_files_from_profiles(
     output_folder="data_generated",
 ):
     # st.write("start generate_json_files_from_profiles")
+    json_files = []
     for it, col in enumerate(load_data):
         # Création de la structure de base du dictionnaire JSON
         # st.write("loop start")
@@ -127,8 +128,9 @@ def generate_json_files_from_profiles(
 
         # print(f"Fichier JSON généré : {json_filename}")
         st.write(f"Fichier JSON généré : {json_filename}")
-        
-        return json_filename
+        json_files.append(json_filename)
+    
+    return json_files
         
         # # Lecture du fichier et conversion en BytesIO pour téléchargement
         # with open(json_filename, "rb") as file:
@@ -164,6 +166,7 @@ def timeslice_to_readingtype(x, register_type="A+"):
 
 # Fonction fictive pour générer les fichiers (à personnaliser)
 def generate_file(load_curves, register_type=["A+"]):
+    generated_files = []
     for reg in register_type:
         st.write(
             f"Generating {reg} file from {load_curves.index[0]} to {load_curves.index[-1]}"
@@ -193,8 +196,11 @@ def generate_file(load_curves, register_type=["A+"]):
             load_curves, tmp_names, tmp_readingtype, reg
         )
 
+
         st.success(f"file successfully generated!, {generated_file}")
-        return f"./{generated_file}"
+        generated_files += generated_file
+    
+    return generated_files
 
 
 # --------------------------------------
@@ -543,13 +549,12 @@ if page == "Génération MeterReadings":
         # index_curves = load_curves.cumsum() + first_indext0
 
         if curve_type == "Tout":
-            # st.write("Generate tout")
-            generated_files.append(generate_file(index_curves_15min, register_types))
-            generated_files.append(generate_file(index_curves_24h, register_types))
+            generated_files+=generate_file(index_curves_15min, register_types)
+            generated_files+=generate_file(index_curves_24h, register_types)
         else:
             # st.write("Generate else")
             # st.dataframe(index_curves)
-            generated_files.append(generate_file(index_curves, register_types))
+            generated_files+=generate_file(index_curves, register_types)
 
         # Création du ZIP
         st.write(generated_files)
