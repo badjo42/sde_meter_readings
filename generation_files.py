@@ -576,6 +576,8 @@ if page == "Génération MeterReadings":
             data=zip_buffer,
             file_name=f"meter_readings_{pd.Timestamp.now().strftime('%Y%m%dT%H%M%S')}.zip",
             mime="application/zip",
+            # Pas de rerun au clic : sinon "Générer" repasse à False et le bouton disparaît
+            on_click="ignore",
         )
     
         if afficher_plot:
